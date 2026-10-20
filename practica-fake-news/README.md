@@ -1,16 +1,37 @@
-# Práctica: Reto Big Data — Detección de fake news
+# Práctica: Reto Big Data — Detección de fake news (UT1)
 
-Web explicativa e interactiva que responde a las 5 preguntas de la práctica
-(detección de noticias falsas para una agencia) usando los conceptos de la
-UT1 — Introducción al Big Data (arquitectura en capas, 5 Vs, CAP/BASE, SCV,
-batch vs streaming...).
+**Explicación visual tipo "vídeo seminteractivo"** para comprender el razonamiento detrás de cada respuesta de la práctica, no solo memorizarla.
 
-## Cómo verla
-Abre `index.html` en cualquier navegador. No necesita servidor ni dependencias.
+## Cómo usarla
 
-## Contenido
-- **P1 · Infraestructura:** capas animadas, comparativas cloud/on-site y batch/streaming.
-- **P2 · Diagrama:** pipeline interactivo de bloques con tour automático.
-- **P3 · Datos e IA:** señales de alerta y justificación del modelo.
-- **P4 · Decisión:** laboratorio interactivo con umbral ajustable (publicar/retener/verificador humano).
-- **P5 · Fases y métricas:** hoja de ruta animada en 4 fases.
+Abre `index.html` en cualquier navegador (no necesita servidor ni dependencias).
+
+Cada escena tiene un **reproductor**: ▶/⏸ reproducir-pausar, ◀▶ avanzar/retroceder paso, ⟲ reiniciar, y puntos para saltar a un paso concreto. Al lado, los paneles de explicación se iluminan sincronizados con la visualización. **Los controles dentro de cada simulación (sliders, botones, selectores) pausan el autoplay** para que puedas experimentar.
+
+## Estructura
+
+```
+index.html      — estructura y contenido (respuestas + justificaciones con página de la UT1)
+styles.css      — estilos (modo oscuro, responsive)
+js/player.js    — motor del reproductor (pasos, autoplay, controles)
+js/sims.js      — simulaciones SVG (una por concepto)
+js/app.js       — montaje: sidebar, navegación, escenas
+```
+
+## Escenas y simulaciones
+
+| Escena | Concepto | Interacción |
+|---|---|---|
+| 0 · El problema | Por qué es Big Data: saturación de 1 máquina vs clúster (UT1 p. 4, 17–19) | Slider de nodos (scale-out) |
+| 1 · Infraestructura | Capas de la arquitectura (UT1 p. 35–36) + batch/streaming + cloud | Pasos animados |
+| 2 · Diagrama | Pipeline fuente→cliente, búfer Kafka, teorema CAP (p. 26) | Slider de producción + selector CAP |
+| 3 · Datos e IA | Señales→score, reglas vs modelo supervisado | Señales clicables, "mutar bulo" |
+| 4 · Decisión | Umbrales, matriz de confusión, coste asimétrico | Sliders umbral/zona gris |
+| 5 · Fases | Implantación por fases vs big-bang, métricas | Comparación en gráfico |
+| 6 · Repaso | Las 5 Vs conectadas al diseño (UT1 p. 8–14) | Animación de síntesis |
+
+## Honestidad académica
+
+- Las citas `UT1 · p. X` referencian páginas reales del PDF de teoría.
+- Lo marcado como **"extra"** (señales concretas de fake news, BERT, Kafka, modo sombra...) es conocimiento adicional de ciencia de datos, **no contenido de la UT1**, y está señalado como tal.
+- Las simulaciones son **simplificaciones pedagógicas** (p. ej., el score de la escena 3 es una suma de pesos; un modelo real aprende los pesos del histórico). Las simplificaciones relevantes están declaradas en el propio texto.

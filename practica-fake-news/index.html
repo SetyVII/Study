@@ -3,363 +3,308 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reto Big Data: Detección de Fake News — Explicación interactiva</title>
+<title>Reto Fake News · UT1 Big Data — Explicación interactiva paso a paso</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<header class="hero">
-  <div class="hero-particles" id="particles"></div>
-  <div class="hero-content">
-    <p class="hero-kicker">Sistemas de Big Data · UT1 · Práctica</p>
-    <h1>Detector de <span class="accent">noticias falsas</span> para una agencia</h1>
-    <p class="hero-sub">Respuestas a las 5 preguntas del reto, con la justificación "por qué sí" y "por qué no" de cada decisión, animadas e interactivas.</p>
-    <nav class="hero-nav">
-      <a href="#q1"><button class="chip">1 · Infraestructura</button></a>
-      <a href="#q2"><button class="chip">2 · Diagrama</button></a>
-      <a href="#q3"><button class="chip">3 · Datos e IA</button></a>
-      <a href="#q4"><button class="chip">4 · Decisión</button></a>
-      <a href="#q5"><button class="chip">5 · Fases y métricas</button></a>
-    </nav>
-    <a class="scroll-hint" href="#q1">▼ Desliza para empezar</a>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <strong>UT1 · Big Data</strong>
+    <span>Reto: fake news</span>
   </div>
-</header>
+  <nav class="sidebar-nav" id="sidebarNav"></nav>
+  <div class="sidebar-foot">Basado en UT1 — Introducción al Big Data (SBD)</div>
+</aside>
 
-<main>
+<main class="content">
 
-<!-- ============ PREGUNTA 1 ============ -->
-<section id="q1" class="question reveal">
-  <div class="q-head">
-    <span class="q-num">Pregunta 1</span>
-    <h2>Infraestructura: ¿qué componentes Big Data necesitas? ¿Batch o streaming? ¿Cloud u on-site?</h2>
-  </div>
-
-  <div class="answer-card">
-    <h3>✅ Respuesta corta</h3>
-    <p>Un pipeline lambda: <strong>ingesta en streaming</strong> (Kafka) para las noticias que llegan a flujo continuo, <strong>almacenamiento distribuido</strong> (data lake sobre HDFS/S3 + NoSQL) para el histórico, <strong>procesamiento híbrido</strong> — Spark Streaming para puntuar cada noticia en el momento (velocidad) y Spark batch para reentrenar modelos con todo el histórico (consistencia, SCV) — y una <strong>capa de servicio/API</strong> para entregar a los clientes. Implantación <strong>cloud</strong> (o híbrida), por escalado horizontal.</p>
-  </div>
-
-  <h3 class="diagram-title">La arquitectura en capas de la UT1 aplicada a la agencia <span class="hint">pasa el ratón por cada capa</span></h3>
-  <div class="layers">
-    <div class="layer" style="--i:0">
-      <div class="layer-left"><span class="layer-icon">📥</span></div>
-      <div class="layer-body">
-        <strong>Ingesta</strong>
-        <span>Conectar con corresponsales, agencias internacionales, redes sociales y comunicados. Cada fuente habla un protocolo distinto; el sistema se adapta a ellas (Kafka + conectores).</span>
+  <!-- ================= INTRO ================= -->
+  <section class="scene" id="s0" data-title="0 · El problema" data-icon="🎯">
+    <header class="scene-head">
+      <span class="scene-tag">Contexto</span>
+      <h1>¿Por qué este reto es un problema de <em>Big Data</em>?</h1>
+      <p class="scene-lead">Antes de diseñar nada, hay que entender qué fuerza al sistema a ser distribuido. Esta escena muestra el origen del problema según la UT1.</p>
+    </header>
+    <div class="split">
+      <div class="stage">
+        <div class="sim" id="sim0"></div>
+        <div class="controls" data-scene="0">
+          <button class="ctl restart" title="Reiniciar">⟲</button>
+          <button class="ctl prev" title="Anterior">◀</button>
+          <button class="ctl play" title="Reproducir/Pausar">⏸</button>
+          <button class="ctl next" title="Siguiente">▶</button>
+          <div class="dots"></div>
+          <span class="step-title"></span>
+        </div>
+      </div>
+      <div class="steps">
+        <article class="step" data-step="0">
+          <h3>El problema de base <small class="ref">UT1 · p. 4</small></h3>
+          <p>Big Data surge cuando hay <strong>datos que desbordan los recursos (CPU, memoria, almacenamiento) de las máquinas individuales</strong>. Una agencia que recibe <em>miles de noticias al día</em> de fuentes muy diversas y debe entregarlas en segundos encaja exactamente en esa definición.</p>
+        </article>
+        <article class="step" data-step="1">
+          <h3>Una sola máquina se satura <small class="ref">UT1 · p. 4, 23</small></h3>
+          <p>Si intentas resolverlo con un único servidor (o una sola base de datos relacional), llegará un punto en que la cola de noticias sin procesar crece sin control. La UT1 lo dice explícitamente: el crecimiento <em>"exige nuevas arquitecturas: conjuntos de máquinas que trabajan de forma coordinada"</em> (p. 4), porque la BD relacional <em>"escala en vertical"</em> y ahí hay un cuello de botella (p. 23).</p>
+        </article>
+        <article class="step" data-step="2">
+          <h3>La solución: clúster con escalado horizontal <small class="ref">UT1 · p. 17–19</small></h3>
+          <p>Un <strong>clúster</strong> es un conjunto de computadoras conectadas en red que trabajan como una sola unidad (p. 17). Sus ventajas (p. 18): alto rendimiento (paralelizar), alta disponibilidad (réplicas), equilibrio de carga y escalabilidad. Y la escalabilidad real se consigue con <strong>escalado horizontal (scale-out)</strong>: añadir nodos según necesidad (p. 19), no comprando una máquina mejor (escala vertical, limitada por el mercado).</p>
+          <p class="note">Observa la simulación: en modo "1 máquina" la cola crece; añade nodos y se estabiliza. Eso es scale-out.</p>
+        </article>
       </div>
     </div>
-    <div class="layer" style="--i:1">
-      <div class="layer-left"><span class="layer-icon">🧩</span></div>
-      <div class="layer-body">
-        <strong>Colección</strong>
-        <span>Unificar formatos heterogéneos (RSS/JSON, texto, metadatos de red social, PDF de comunicado) en un único esquema común de "noticia".</span>
+  </section>
+
+  <!-- ================= P1 ================= -->
+  <section class="scene" id="s1" data-title="1 · Infraestructura" data-icon="🏗️">
+    <header class="scene-head">
+      <span class="scene-tag">Pregunta 1</span>
+      <h1>¿Qué componentes Big Data necesitas? ¿Batch o streaming? ¿Cloud u on-site?</h1>
+      <p class="scene-lead">Componentes para ingerir, almacenar, procesar y servir noticias — y las tres decisiones clave justificadas con la UT1.</p>
+    </header>
+    <div class="split">
+      <div class="stage">
+        <div class="sim" id="sim1"></div>
+        <div class="controls" data-scene="1">
+          <button class="ctl restart" title="Reiniciar">⟲</button>
+          <button class="ctl prev" title="Anterior">◀</button>
+          <button class="ctl play" title="Reproducir/Pausar">⏸</button>
+          <button class="ctl next" title="Siguiente">▶</button>
+          <div class="dots"></div>
+          <span class="step-title"></span>
+        </div>
+      </div>
+      <div class="steps">
+        <article class="step" data-step="0">
+          <h3>✅ Respuesta directa</h3>
+          <p>Las <strong>capas de la arquitectura Big Data</strong> de la UT1 (p. 35–36), instanciadas para la agencia: <strong>ingesta</strong> (Kafka: corresponsales, agencias, redes, comunicados) → <strong>colección</strong> (unificar formatos a un esquema común) → <strong>almacenamiento</strong> (data lake HDFS/S3 + NoSQL, distribuido y replicado) → <strong>procesamiento híbrido</strong> (Spark Streaming en caliente + Spark batch nocturno) → <strong>consulta/analítica</strong> (modelo de IA) → <strong>visualización/servicio</strong> (API a clientes y cuadro de mando). Transversales: seguridad y monitorización (p. 36). Implantación <strong>cloud</strong>, por escalado horizontal.</p>
+        </article>
+        <article class="step" data-step="1">
+          <h3>Paso a paso: las capas <small class="ref">UT1 · p. 35–36</small></h3>
+          <p>La UT1 define el flujo lineal: ingesta (el sistema se adapta a las fuentes, que preexisten), colección (integrar formatos heterogéneos en un conjunto coherente), almacenamiento (distribuido, diseñado para gran cantidad), procesamiento (sirve a la capa superior), consulta/analítica (donde se obtiene valor), visualización (decisión de negocio). Cada bloque de la simulación es una de esas capas con su función concreta en la agencia.</p>
+        </article>
+        <article class="step" data-step="2">
+          <h3>¿Batch o streaming? Ambos — pero por causas distintas <small class="ref">UT1 · p. 31, 33, 14</small></h3>
+          <p><strong>Streaming para decidir</strong>: procesar <em>"a la velocidad a la que llega el flujo de datos"</em> (p. 31). Una noticia tiene un valor temporal enorme: <em>"un dato vale mucho más si tiene 1 segundo que si tiene 1 hora"</em> (p. 14) → no puedes esperar al lote nocturno para puntuar una noticia.</p>
+          <p><strong>Batch para aprender</strong>: reentrenar el modelo con <em>todo</em> el histórico. Según el <strong>principio SCV</strong> (p. 33), solo puedes tener 2 de 3: el batch nocturno usa <strong>C+V</strong> (todos los datos, máxima precisión, sin urgencia), el streaming usa <strong>S+V</strong> (rápido, con muestras). No son contradictorios: son dos necesidades distintas del mismo sistema.</p>
+          <p class="err">⚠ <strong>Error común:</strong> elegir "streaming" y abandonar el batch. Sin batch no hay reentrenamiento consistente; sin streaming la noticia llega tarde.</p>
+        </article>
+        <article class="step" data-step="3">
+          <h3>¿Cloud u on-site? Cloud <small class="ref">UT1 · p. 18–19</small></h3>
+          <p>El escalado horizontal (p. 19) permite "empezar con un número determinado de nodos e ir incorporando más según crece la necesidad". El cloud es ese modelo sin comprar hardware: el tráfico de noticias tiene <strong>picos</strong> (elecciones, catástrofes, viralidad) y el cloud absorbe el pico añadiendo nodos y los libera después. On-site obligaría a sobredimensionar de inicio para el peor día del año.</p>
+          <p class="err">⚠ <strong>Matiz:</strong> on-site (o híbrido) sería defendible si hubiera requisitos legales de soberanía de datos o un CPD ya amortizado. El PDF no trata cloud vs on-site; esta es <em>aplicación razonada</em> del concepto de escalado horizontal de las pp. 18–19.</p>
+        </article>
       </div>
     </div>
-    <div class="layer" style="--i:2">
-      <div class="layer-left"><span class="layer-icon">🗄️</span></div>
-      <div class="layer-body">
-        <strong>Almacenamiento</strong>
-        <span>Distribuido y replicado → alta disponibilidad. Data lake para el crudo + NoSQL (A+P / BASE) para lo operativo. La BD relacional sola se descarta: escala solo en vertical.</span>
+  </section>
+
+  <!-- ================= P2 ================= -->
+  <section class="scene" id="s2" data-title="2 · Diagrama" data-icon="🗺️">
+    <header class="scene-head">
+      <span class="scene-tag">Pregunta 2</span>
+      <h1>Diagrama de bloques: de la fuente al cliente</h1>
+      <p class="scene-lead">El diseño de alto nivel, bloque a bloque, con dos decisiones de almacenamiento e ingesta explicadas visualmente.</p>
+    </header>
+    <div class="split">
+      <div class="stage">
+        <div class="sim" id="sim2"></div>
+        <div class="controls" data-scene="2">
+          <button class="ctl restart" title="Reiniciar">⟲</button>
+          <button class="ctl prev" title="Anterior">◀</button>
+          <button class="ctl play" title="Reproducir/Pausar">⏸</button>
+          <button class="ctl next" title="Siguiente">▶</button>
+          <div class="dots"></div>
+          <span class="step-title"></span>
+        </div>
+      </div>
+      <div class="steps">
+        <article class="step" data-step="0">
+          <h3>✅ Respuesta directa</h3>
+          <p>Fuentes → <strong>Kafka</strong> (ingesta/colección) → <strong>Data lake</strong> (crudo, histórico) + <strong>NoSQL</strong> (operativo, A+P/BASE) → <strong>Spark</strong> (streaming en caliente + batch nocturno) → <strong>Modelo IA + reglas de decisión</strong> (analítica) → <strong>API / cuadro de mando</strong> (servicio) → clientes. Seguridad y monitorización transversales. Es exactamente el paisaje de la UT1 (p. 38: Spark, NoSQL, herramientas de analítica y visualización) montado sobre las capas de las pp. 35–36.</p>
+        </article>
+        <article class="step" data-step="1">
+          <h3>Paso a paso: sigue una noticia <small class="ref">UT1 · p. 35–36</small></h3>
+          <p>En la simulación, una noticia recorre cada bloque y se muestra qué le ocurre en él: se capta con el protocolo de su fuente (ingesta), se normaliza al esquema común (colección), se guarda replicada (almacenamiento), se puntúa (procesamiento + analítica) y se sirve (visualización). <em>Haz clic en cada bloque</em> para ver su función.</p>
+        </article>
+        <article class="step" data-step="2">
+          <h3>Por qué Kafka (el búfer) <small class="ref">aplicación de pp. 35, 31</small></h3>
+          <p>Las fuentes producen a velocidades distintas y con picos; si el procesamiento va más lento un momento, sin búfer se pierden noticias o se frena a la fuente. Una cola de mensajes <strong>descarga</strong>: acumula cuando llega más de lo que se procesa y vacía cuando hay margen. La UT1 no menciona Kafka; lo justifico como implementación típica de la capa de ingesta/colección (p. 35) para soportar la V de Velocidad (p. 11).</p>
+          <p class="note">Sube la tasa de producción en la simulación y observa cómo el búfer absorbe el pico sin perder noticias.</p>
+        </article>
+        <article class="step" data-step="3">
+          <h3>¿Y el almacenamiento? CAP decide <small class="ref">UT1 · p. 23, 26, 27</small></h3>
+          <p>La UT1 ya descartó la BD relacional como pieza central (p. 23: escala vertical, cuello de botella). Para el almacenamiento distribuido del histórico, el <strong>teorema CAP</strong> (p. 26) dice que solo puedes garantizar 2 de 3 propiedades. Aquí se elige <strong>A+P</strong> con filosofía <strong>BASE</strong> (p. 27): ante un corte de red, preferimos que el sistema <em>siga respondiendo</em> (aunque una lectura pueda estar algo desfasada: consistencia eventual) antes que quedarse bloqueado. Para una agencia, no entregar noticias es peor que entregar con un desfase de milisegundos.</p>
+          <p class="err">⚠ <strong>Error común:</strong> pedir C+A+P a la vez. El teorema dice que es imposible (p. 26). Pruébalo en el selector de la simulación.</p>
+        </article>
       </div>
     </div>
-    <div class="layer" style="--i:3">
-      <div class="layer-left"><span class="layer-icon">⚡</span></div>
-      <div class="layer-body">
-        <strong>Procesamiento</strong>
-        <span>Streaming para puntuar al vuelo + batch nocturno para reentrenar. Spark gestiona el paralelismo distribuido de forma transparente.</span>
+  </section>
+
+  <!-- ================= P3 ================= -->
+  <section class="scene" id="s3" data-title="3 · Datos e IA" data-icon="🤖">
+    <header class="scene-head">
+      <span class="scene-tag">Pregunta 3</span>
+      <h1>¿Qué señales delatan una fake y qué modelo usar?</h1>
+      <p class="scene-lead">Señales → score, y una comparación honesta entre reglas fijas y aprendizaje supervisado.</p>
+    </header>
+    <div class="split">
+      <div class="stage">
+        <div class="sim" id="sim3"></div>
+        <div class="controls" data-scene="3">
+          <button class="ctl restart" title="Reiniciar">⟲</button>
+          <button class="ctl prev" title="Anterior">◀</button>
+          <button class="ctl play" title="Reproducir/Pausar">⏸</button>
+          <button class="ctl next" title="Siguiente">▶</button>
+          <div class="dots"></div>
+          <span class="step-title"></span>
+        </div>
+      </div>
+      <div class="steps">
+        <article class="step" data-step="0">
+          <h3>✅ Respuesta directa</h3>
+          <p><strong>Señales:</strong> (a) del contenido — lenguaje sensacionalista, MAYÚSCULAS, afirmaciones absolutas, errores; (b) de la fuente — medio sin reputación, cuenta recién creada, historial de bulos (metadatos: autor, fecha — p. 12); (c) de contrastación — ninguna agencia de referencia confirma el hecho; (d) de difusión — propagación viral anómala; (e) multimedia reciclado con metadatos incoherentes. <strong>Modelo:</strong> clasificación <strong>supervisada</strong> de texto (transformer tipo BERT) + señales estructuradas (gradient boosting), reentrenado en batch.</p>
+          <p class="note">🏷️ <strong>Qué viene del PDF y qué no:</strong> la UT1 solo dice que Big Data permite <em>"aplicar técnicas de minería de datos para crear modelos predictivos"</em> y usarlos en <em>"sistemas automáticos"</em> (p. 5–6) y detectar <em>"casos de fraude"</em> (p. 6). Las señales concretas y el tipo de modelo son <strong>conocimiento adicional</strong> de ciencia de datos, no contenido de la UT1.</p>
+        </article>
+        <article class="step" data-step="1">
+          <h3>Paso a paso: de señal a score <small>extra a la UT1 · p. 5–6</small></h3>
+          <p>Cada señal aporta evidencia; el modelo combina <strong>miles</strong> de ellas aprendiendo de ejemplos etiquetados (noticias verificadas verdaderas/falsas). En la simulación activas señales sobre una noticia y ves cómo se acumula la evidencia hacia "sospechosa".</p>
+          <p class="err">⚠ <strong>Simplificación declarada:</strong> el score de la simulación es una <em>suma de pesos</em> para que se entienda la idea de "evidencia acumulada". Un modelo real (BERT) no suma pesos a mano: los aprende del histórico, y captura relaciones entre palabras que ninguna lista de reglas expresa.</p>
+        </article>
+        <article class="step" data-step="2">
+          <h3>Por qué NO reglas deterministas</h3>
+          <p>Una regla tipo <em>"si contiene 'ALARMANTE' → falsa"</em> falla en cuanto el emisor del bulo <strong>muta el texto</strong>: sinónimos, espacios, ortografía alternativa. Las reglas son frágiles y hay que mantenerlas a mano para miles de noticias al día. Pulsa <em>"Mutar bulo"</em> en la simulación: la regla deja de atrapar el bulo, pero el modelo entrenado (que usa el contexto completo, no una palabra) sigue puntuándolo alto.</p>
+        </article>
+        <article class="step" data-step="3">
+          <h3>Por qué SÍ supervisado (y qué exige) <small>UT1 · p. 5–6, 13</small></h3>
+          <p>Es un problema de <strong>clasificación con ejemplos etiquetados</strong>: el escenario natural del aprendizaje supervisado. Pero la calidad depende de la <strong>V de Veracidad</strong> (p. 13): entrenar con bulos mal etiquetados es entrenar con ruido — señal/ruido de nuevo. De ahí que las fases de la pregunta 5 incluyan validar el histórico antes del primer modelo.</p>
+          <p class="err">⚠ <strong>Error común:</strong> pensar que "más datos" siempre mejora el modelo. Si el dato de entrenamiento es ruidoso o está mal etiquetado, el modelo aprende el error (p. 13: los datos generados por personas traen más ruido que los automáticos).</p>
+        </article>
       </div>
     </div>
-    <div class="layer" style="--i:4">
-      <div class="layer-left"><span class="layer-icon">🔍</span></div>
-      <div class="layer-body">
-        <strong>Consulta y analítica</strong>
-        <span>Aquí vive el modelo de IA: estadística, señales de veracidad, score de "fakeness". Aquí empieza a obtenerse el valor del dato.</span>
+  </section>
+
+  <!-- ================= P4 ================= -->
+  <section class="scene" id="s4" data-title="4 · Decisión" data-icon="⚖️">
+    <header class="scene-head">
+      <span class="scene-tag">Pregunta 4</span>
+      <h1>Publicar, retener o pasar a un verificador humano</h1>
+      <p class="scene-lead">Un laboratorio con umbral, matriz de confusión en vivo y la asimetría de costes que justifica el humano en el bucle.</p>
+    </header>
+    <div class="split">
+      <div class="stage">
+        <div class="sim" id="sim4"></div>
+        <div class="controls" data-scene="4">
+          <button class="ctl restart" title="Reiniciar">⟲</button>
+          <button class="ctl prev" title="Anterior">◀</button>
+          <button class="ctl play" title="Reproducir/Pausar">⏸</button>
+          <button class="ctl next" title="Siguiente">▶</button>
+          <div class="dots"></div>
+          <span class="step-title"></span>
+        </div>
+      </div>
+      <div class="steps">
+        <article class="step" data-step="0">
+          <h3>✅ Respuesta directa</h3>
+          <p>El modelo emite un <strong>score de veracidad [0–1]</strong>. Con dos umbrales se crean tres zonas: score alto → <strong>publicar</strong>; score bajo → <strong>retener</strong> (y avisar a la fuente); zona intermedia → <strong>verificador humano</strong>, cuyo veredicto se realimenta al dataset de reentrenamiento. Los umbrales se calibran según el coste de cada tipo de error.</p>
+        </article>
+        <article class="step" data-step="1">
+          <h3>Paso a paso: por qué tres zonas</h3>
+          <p>Ningún clasificador real es infalible: un score de 0,55 no es lo mismo que 0,95. <strong>Publicar</strong> exige confianza alta; <strong>retener</strong> exige evidencia fuerte de falsedad (si no, matas exclusivas legítimas); y lo intermedio es exactamente donde <em>más vale</em> un ojo experto. Fíjate en la simulación: mueve el umbral y observa cómo cambian los cuatro números de la <strong>matriz de confusión</strong>.</p>
+        </article>
+        <article class="step" data-step="2">
+          <h3>La asimetría de costes manda</h3>
+          <p><strong>Falso negativo</strong> (publicar una falsa): daño reputacional enorme para la agencia — el peor error. <strong>Falso positivo</strong> (retener una verdad): exclusiva perdida, daño pequeño y privado. Como los costes no son simétricos, los umbrales no se ponen "en el 0,50 exacto": se desplazan hacia proteger la publicación. En la simulación, el indicador de coste penaliza muchísimo más las falsas publicadas.</p>
+        </article>
+        <article class="step" data-step="3">
+          <h3>El humano no es un parche: es el motor de mejora <small class="ref">UT1 · p. 5–6, 13</small></h3>
+          <p>Cada veredicto humano es una <strong>etiqueta nueva y fiable</strong> (veracidad alta, p. 13) para los casos más difíciles — justo los que el modelo no sabe resolver. Esos ejemplos entran al histórico y el reentrenado batch nocturno (pregunta 1) convierte la duda resuelta en conocimiento del sistema: la UT1 lo formula como <em>crear modelos predictivos a partir de los datos</em> (p. 5–6).</p>
+          <p class="err">⚠ <strong>Error común:</strong> "con IA suficiente, el humano sobra". Sin realimentación, el modelo se degrada (los bulos cambian: drift). El bucle humano→dataset→reentrenado es lo que mantiene el sistema vivo.</p>
+        </article>
       </div>
     </div>
-    <div class="layer" style="--i:5">
-      <div class="layer-left"><span class="layer-icon">📊</span></div>
-      <div class="layer-body">
-        <strong>Visualización / servicio</strong>
-        <span>API que entrega noticias verificadas a periódicos, TV, radio y medios digitales, y cuadro de mando para editores y verificadores humanos.</span>
+  </section>
+
+  <!-- ================= P5 ================= -->
+  <section class="scene" id="s5" data-title="5 · Fases y métricas" data-icon="📈">
+    <header class="scene-head">
+      <span class="scene-tag">Pregunta 5</span>
+      <h1>¿En qué fases implantarlo y con qué métricas?</h1>
+      <p class="scene-lead">Cuatro fases con riesgo creciente, y por qué el "modo sombra" evita el desastre del big-bang.</p>
+    </header>
+    <div class="split">
+      <div class="stage">
+        <div class="sim" id="sim5"></div>
+        <div class="controls" data-scene="5">
+          <button class="ctl restart" title="Reiniciar">⟲</button>
+          <button class="ctl prev" title="Anterior">◀</button>
+          <button class="ctl play" title="Reproducir/Pausar">⏸</button>
+          <button class="ctl next" title="Siguiente">▶</button>
+          <div class="dots"></div>
+          <span class="step-title"></span>
+        </div>
+      </div>
+      <div class="steps">
+        <article class="step" data-step="0">
+          <h3>✅ Respuesta directa</h3>
+          <p><strong>F1 · Histórico:</strong> unificar el histórico etiquetado en el lake, entrenar el primer modelo en batch, validarlo offline (precisión/recall/F1). <strong>F2 · Modo sombra:</strong> el pipeline streaming puntúa todo en paralelo <em>sin decidir</em>; se mide su acuerdo con la decisión humana real. <strong>F3 · Asistida:</strong> retención automática solo en scores extremos; zona gris → humano. <strong>F4 · Producción plena:</strong> el sistema decide el grueso, con muestreo de control, reentrenado periódico y monitorización de drift. Métricas: F1, recall, % falsas publicadas, % acuerdo con editores, latencia p95, tamaño de cola humana, drift.</p>
+        </article>
+        <article class="step" data-step="1">
+          <h3>Paso a paso: por qué estas fases <small class="ref">UT1 · p. 36, 6</small></h3>
+          <p>Cada fase reduce el riesgo de la siguiente: primero se valida el dato (F1), luego el sistema con <strong>riesgo cero</strong> (F2: el modelo puntúa pero no decide), después se automatiza solo lo evidente (F3) y solo al final se confía el flujo (F4). Es la propia idea de la UT1 de <em>monitorización como parte de la gobernanza</em> (p. 36) y de <em>actuar basándose en la evidencia de los datos</em> (p. 6): sin línea base en sombra no hay evidencia de que el sistema mejora el proceso actual.</p>
+        </article>
+        <article class="step" data-step="2">
+          <h3>Qué mide cada métrica (y qué NO detectaría sin ella)</h3>
+          <p><strong>Recall:</strong> de todas las falsas, ¿cuántas atrapé? Sin ella, un modelo que retiene poquísimo parece "precioso" mientras deja pasar bulos. <strong>Precisión:</strong> de las que retuve, ¿cuántas eran falsas de verdad? Sin ella, retenerlo todo maximizaría recall y mataría la agencia. <strong>Latencia p95:</strong> sin ella, el streaming podría "funcionar" destruyendo el valor temporal (p. 14). <strong>Drift:</strong> cae la precisión con el tiempo = los bulos cambiaron = reentrenar. <strong>Cola humana:</strong> si crece, los umbrales están mal calibrados.</p>
+        </article>
+        <article class="step" data-step="3">
+          <h3>Por qué NO un big-bang</h3>
+          <p>Activarlo todo el día uno con umbrales sin calibrar produce o (a) cola humana infinita que paraliza la agencia, o (b) falsas publicadas que destruyen la credibilidad — el activo que el sistema debe proteger. En la simulación, pulsa <em>"Simular big-bang"</em> y compáralo con el despliegue por fases: mismo modelo, distinta secuencia de implantación, resultados opuestos.</p>
+        </article>
       </div>
     </div>
-    <div class="transversal">
-      <span>🔒 Seguridad</span><span>📈 Monitorización</span>
-      <small>Capas transversales: protegen y auditan todo el flujo (gobernanza de datos).</small>
-    </div>
-  </div>
+  </section>
 
-  <div class="compare-grid">
-    <div class="compare yes">
-      <h4>✔ Batch + Streaming (arquitectura lambda) — por qué SÍ</h4>
-      <ul>
-        <li><strong>Streaming</strong> es obligatorio para la V de Velocidad: las noticias llegan a flujo continuo y hay que puntuarlas <em>a la velocidad a la que llegan</em>, actualizando estructuras en memoria.</li>
-        <li><strong>Batch</strong> nocturno reentrena el modelo con <em>todo</em> el histórico sin muestrear → máxima consistencia (precisión) según el principio SCV.</li>
-        <li>El principio SCV lo permite: batch usa C+V y streaming usa S+V (muestreando). No hay contradicción, hay dos caminos.</li>
-      </ul>
+  <!-- ================= REPASO ================= -->
+  <section class="scene" id="s6" data-title="Repaso · 5 Vs" data-icon="🧠">
+    <header class="scene-head">
+      <span class="scene-tag">Síntesis</span>
+      <h1>El reto completo, leído con las 5 Vs</h1>
+      <p class="scene-lead">Cada decisión del diseño responde a una V de la UT1. Última escena: conecta todo.</p>
+    </header>
+    <div class="split">
+      <div class="stage">
+        <div class="sim" id="sim6"></div>
+        <div class="controls" data-scene="6">
+          <button class="ctl restart" title="Reiniciar">⟲</button>
+          <button class="ctl prev" title="Anterior">◀</button>
+          <button class="ctl play" title="Reproducir/Pausar">⏸</button>
+          <button class="ctl next" title="Siguiente">▶</button>
+          <div class="dots"></div>
+          <span class="step-title"></span>
+        </div>
+      </div>
+      <div class="steps">
+        <article class="step" data-step="0">
+          <h3>Las 5 Vs sobre el caso <small class="ref">UT1 · p. 8–14</small></h3>
+          <p><strong>Volumen</strong> (p. 9–10): miles de noticias/día + histórico + señales de redes → almacenamiento distribuido. <strong>Velocidad</strong> (p. 11): flujo continuo y exclusivas con vida de minutos → streaming. <strong>Variedad</strong> (p. 12): RSS, JSON, texto, PDF, imágenes, vídeo, metadatos → capa de colección. <strong>Veracidad</strong> (p. 13): separar señal de ruido es el corazón del reto. <strong>Valor</strong> (p. 14): una falsa entregada vale menos que cero.</p>
+          <p class="note">En la visualización, cada bloque del sistema se ilumina cuando activas la V que lo justifica.</p>
+        </article>
+        <article class="step" data-step="1">
+          <h3>Si solo recuerdas una idea</h3>
+          <p>Todo el diseño se reduce a una cadena: <em>el problema fuerza distribuir (p. 4) → distribuir fuerza elegir entre CAP (p. 26) y SCV (p. 33) → esas elecciones definen batch vs streaming y BASE vs ACID → y el resto (modelo, umbrales, fases) es ingeniería sobre esa base</em>. Comprender los compromisos, no memorizar componentes, es lo que permite resolver cualquier variante del reto.</p>
+        </article>
+      </div>
     </div>
-    <div class="compare no">
-      <h4>✘ Solo batch, o solo streaming — por qué NO</h4>
-      <ul>
-        <li><strong>Solo batch:</strong> la noticia falsa llegaría al cliente horas o días después de analizada. Inaceptable: el valor de una noticia decae con el tiempo (V de Valor: "un dato vale más con 1 segundo que con 1 hora").</li>
-        <li><strong>Solo streaming:</strong> no puedes reentrenar con el histórico completo; si además exiges velocidad y volumen, SCV te obliga a muestrear y pierdes consistencia (precisión) del modelo.</li>
-        <li><strong>Monomáquina/BD relacional sola:</strong> miles de noticias/día + señales de redes sociales desbordan CPU, memoria y almacenamiento de una máquina individual; la BD relacional escala solo en vertical y hay un límite de mercado.</li>
-      </ul>
-    </div>
-    <div class="compare yes">
-      <h4>✔ Cloud — por qué SÍ</h4>
-      <ul>
-        <li>Escalado horizontal (scale-out): añadir nodos según necesidad, sin sobredimensionar de inicio ni comprar hardware propio.</li>
-        <li>El tráfico de noticias tiene picos (elecciones, catástrofes, viralidad): el cloud absorbe picos y libera recursos en valle.</li>
-        <li>Gestión delegada de la capa física; te dedicas al modelo, que es donde está el valor.</li>
-      </ul>
-    </div>
-    <div class="compare no">
-      <h4>✘ On-site puro — por qué NO (en este caso)</h4>
-      <ul>
-        <li>CAPEX alto y sobredimensionado para picos esporádicos.</li>
-        <li>Escalado más lento (comprar, montar, configurar racks) frente a minutos en cloud.</li>
-        <li><em>Matiz honesto:</em> sería razonable on-site si la agencia tuviera requisitos legales de soberanía de datos o una sala de servidores ya amortizada → entonces híbrido: cloud para el pico, on-site para el histórico sensible.</li>
-      </ul>
-    </div>
-  </div>
-</section>
+  </section>
 
-<!-- ============ PREGUNTA 2 ============ -->
-<section id="q2" class="question reveal">
-  <div class="q-head">
-    <span class="q-num">Pregunta 2</span>
-    <h2>Diseño de alto nivel: diagrama de bloques del sistema</h2>
-  </div>
-  <div class="answer-card">
-    <h3>✅ Respuesta corta</h3>
-    <p>De izquierda a derecha: Fuentes → Ingesta → Colección → Almacenamiento (lake + NoSQL) → Procesamiento (streaming + batch) → Analítica (modelo IA) → Decisión → Servicio a clientes. Con seguridad y monitorización transversales.</p>
-  </div>
-
-  <div class="pipeline-stage">
-    <button class="pipe-btn active" data-stage="0">1 · Fuentes</button>
-    <button class="pipe-btn" data-stage="1">2 · Ingesta + Colección</button>
-    <button class="pipe-btn" data-stage="2">3 · Almacenamiento</button>
-    <button class="pipe-btn" data-stage="3">4 · Procesamiento</button>
-    <button class="pipe-btn" data-stage="4">5 · IA y decisión</button>
-    <button class="pipe-btn" data-stage="5">6 · Clientes</button>
-  </div>
-
-  <div class="pipeline-diagram" id="pipelineDiagram">
-    <div class="pipe-block stage-block" data-stage="0">
-      <h4>📻 Fuentes</h4>
-      <p>Corresponsales · Agencias internacionales · Redes sociales · Comunicados. Diversidad de formatos → <strong>V de Variedad</strong>.</p>
-    </div>
-    <div class="pipe-block stage-block" data-stage="1">
-      <h4>📥 Ingesta y colección</h4>
-      <p><strong>Apache Kafka</strong> como cola de mensajes: descarga las fuentes del sistema (si un cliente va lento, no se pierden noticias) y estandariza todo a un esquema común de noticia.</p>
-    </div>
-    <div class="pipe-block stage-block" data-stage="2">
-      <h4>🗄️ Data lake + NoSQL</h4>
-      <p>Crudo en HDFS/S3 (histórico, replicado). Lo operativo en NoSQL con filosofía <strong>A+P / BASE</strong>: siempre responde aunque un nodo se aisle; la consistencia es eventual, tolerable aquí.</p>
-    </div>
-    <div class="pipe-block stage-block" data-stage="3">
-      <h4>⚡ Spark (streaming + batch)</h4>
-      <p>Spark Streaming puntúa cada noticia en el momento (S+V del SCV). Job batch nocturno reentrena con todo el histórico (C+V). Spark gestiona el paralelismo distribuido automáticamente.</p>
-    </div>
-    <div class="pipe-block stage-block" data-stage="4">
-      <h4>🤖 Modelo + reglas de decisión</h4>
-      <p>Clasificador de veracidad + señales de fuente → score. Zonas: publica / retiene / verificador humano (pregunta 4).</p>
-    </div>
-    <div class="pipe-block stage-block" data-stage="5">
-      <h4>📡 Servicio a clientes</h4>
-      <p>API de entrega a prensa, TV, radio y digitales. Cuadro de mando para editores (capa de visualización) y cola de revisión para verificadores.</p>
-    </div>
-    <div class="pipe-block cross-cutting">
-      <h4>🔒 Seguridad · 📈 Monitorización</h4>
-      <p>Transversales a todo el flujo (gobernanza de datos): protección frente a ataques y auditoría de que el dato usado es correcto y está actualizado.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ============ PREGUNTA 3 ============ -->
-<section id="q3" class="question reveal">
-  <div class="q-head">
-    <span class="q-num">Pregunta 3</span>
-    <h2>Datos e IA: ¿qué señales indican que una noticia puede ser falsa y qué modelo usarías?</h2>
-  </div>
-  <div class="answer-card">
-    <h3>✅ Respuesta corta</h3>
-    <p><strong>Señales:</strong> del contenido (titulares sensacionalistas en MAYÚSCULAS, afirmaciones absolutas, errores ortográficos, tono emocional), de la fuente (medio desconocido, cuenta recién creada, historial de desinformación), del contexto (verificación cruzada: ninguna otra agencia confirma el hecho) y de difusión (propagación viral anómala). <strong>Modelo:</strong> clasificación supervisada de texto — transformer tipo BERT por su manejo del lenguaje natural, entrenado con datasets etiquetados de noticias verdaderas/falsas, apoyado en señales estructurales con un modelo de gradiente boosting.</p>
-  </div>
-
-  <h3 class="diagram-title">Señales de alerta que alimentan el modelo</h3>
-  <div class="signals-grid">
-    <div class="signal-card"><span class="sig-icon">📝</span><strong>Contenido</strong><p>Titular en mayúsculas, lenguaje sensacionalista o emocional, afirmaciones absolutas ("SIEMPRE", "NADIE lo cuenta"), faltas de ortografía.</p></div>
-    <div class="signal-card"><span class="sig-icon">🕵️</span><strong>Fuente</strong><p>Medio sin reputación, dominio recién creado, cuenta anónima, historial previo de bulos (metadatos: autor y fecha de creación).</p></div>
-    <div class="signal-card"><span class="sig-icon">🔗</span><strong>Contrastación</strong><p>Ninguna agencia de referencia publica el mismo hecho; las citas no existen o los enlaces no verifican lo afirmado.</p></div>
-    <div class="signal-card"><span class="sig-icon">🚀</span><strong>Difusión</strong><p>Velocidad de propagación anómala: pico viral en minutos desde cuentas coordinadas (comportamiento de bots).</p></div>
-    <div class="signal-card"><span class="sig-icon">🖼️</span><strong>Multimedia</strong><p>Fotos/vídeos reciclados de otros contextos, metadatos EXIF que delatan fecha u origen distintos del alegado.</p></div>
-    <div class="signal-card"><span class="sig-icon">🕒</span><strong>Frescura del dato</strong><p>El valor depende del tiempo transcurrido: la ventana de verificación antes de publicar es minúscula.</p></div>
-  </div>
-
-  <div class="compare-grid">
-    <div class="compare yes">
-      <h4>✔ Aprendizaje supervisado (BERT + boosting) — por qué SÍ</h4>
-      <ul>
-        <li>Es un problema de <strong>clasificación binaria</strong> (verdadera/falsa) con miles de ejemplos etiquetados disponibles: el escenario ideal del aprendizaje supervisado.</li>
-        <li>Un transformer (BERT) captura el significado del texto completo y de su contexto, no palabras sueltas.</li>
-        <li>Complementado con señales estructuradas (reputación de fuente, velocidad viral) mediante gradient boosting, aprovecha los metadatos del entorno Big Data.</li>
-        <li>Encaja con la UT1: aplicar minería de datos sobre datos integrados de fuentes diversas para crear modelos predictivos.</li>
-      </ul>
-    </div>
-    <div class="compare no">
-      <h4>✘ Otras opciones — por qué NO como pieza central</h4>
-      <ul>
-        <li><strong>No supervisado (clustering):</strong> agrupa noticias parecidas pero no etiqueta "falso"; útil como ayuda (detectar campañas coordinadas), insuficiente como decisión final.</li>
-        <li><strong>Reglas deterministas ("palabra sospechosa → falsa"):</strong> la language es ambigua y los bulos mutan para esquivar reglas; precisión baja y mantenimiento inasumible a miles de noticias/día.</li>
-        <li><strong>Red neuronal sin más, entrenada con poco histórico:</strong> los datos de bulos son cambiantes; hace falta el reentrenado batch periódico y una capa humana para casos dudosos.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="veracity-callout">
-    <strong>V de Veracidad (UT1):</strong> la relación señal/ruido manda. Los datos generados por personas (redes sociales) traen más ruido que los de sistemas automáticos (agencias), y el modelo debe entrenarse con datos de calidad — si no, <em>garbage in, garbage out</em>.
-  </div>
-</section>
-
-<!-- ============ PREGUNTA 4 ============ -->
-<section id="q4" class="question reveal">
-  <div class="q-head">
-    <span class="q-num">Pregunta 4</span>
-    <h2>Decisión: flujo de publicar / retener / pasar a verificador humano</h2>
-  </div>
-  <div class="answer-card">
-    <h3>✅ Respuesta corta</h3>
-    <p>El modelo emite un <strong>score de veracidad [0–1]</strong>. Con tres zonas por umbrales: score alto → <strong>publicar</strong>; score bajo → <strong>retener</strong> (y avisar a la fuente); zona gris → <strong>verificador humano</strong>, cuyo veredicto se realimenta al dataset de entrenamiento. Los umbrales se fijan según el coste de cada error (falso positivo publicado = daño reputacional enorme).</p>
-  </div>
-
-  <div class="decision-lab">
-    <h3 class="diagram-title">Laboratorio interactivo: mueve el umbral y mira a dónde va cada noticia</h3>
-    <div class="slider-row">
-      <label for="thresholdSlider">Umbral de decisión: <output id="thresholdVal">0.50</output></label>
-      <input type="range" id="thresholdSlider" min="0" max="100" value="50">
-    </div>
-    <div class="news-flow" id="newsFlow"></div>
-    <div class="decision-legend">
-      <span class="tag publish">✅ Publicar</span>
-      <span class="tag review">🧐 Verificador humano</span>
-      <span class="tag hold">🛑 Retener</span>
-    </div>
-    <div class="metrics-row" id="metricsRow"></div>
-    <p class="lab-note">Los umbrales se ajustan al coste de cada error: publicar una falsa daña la reputación de la agencia (falso negativo), retener una verdad buena pierde una exclusiva (falso positivo). La zona gris existe porque la consistencia del modelo no es absoluta.</p>
-  </div>
-
-  <div class="compare-grid">
-    <div class="compare yes">
-      <h4>✔ Human-in-the-loop — por qué SÍ</h4>
-      <ul>
-        <li>Ningún modelo llega al 100% de precisión; los casos con score intermedio son precisamente los más inciertos y los que más valoran un ojo experto.</li>
-        <li>El veredicto humano etiqueta datos nuevos → el histórico crece con ejemplos difíciles → el reentrenado batch mejora (el modelo aprende de sus dudas).</li>
-        <li>Encaja con el teorema CAP/Base: preferimos un sistema que siempre responda y corrija eventualmente, antes que bloquear todo el flujo por consistencia perfecta.</li>
-      </ul>
-    </div>
-    <div class="compare no">
-      <h4>✘ Decisión 100% automática — por qué NO</h4>
-      <ul>
-        <li><strong>Publicar solo si score &gt; umbral sin revisión:</strong> una sola falsa publicada puede destruir la credibilidad de la agencia; el coste del falso negativo es asimétrico.</li>
-        <li><strong>Bloquear todo lo dudoso:</strong> miles de noticias al día → el verificador humano se satura y las exclusivas legítimas mueren retenidas (perdida la V de Valor por exceso de ruido).</li>
-        <li><strong>Fiarse ciegamente del score:</strong> los bulos evolucionan; sin reentrenado ni supervisión, el modelo se degrada silenciosamente (drift).</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- ============ PREGUNTA 5 ============ -->
-<section id="q5" class="question reveal">
-  <div class="q-head">
-    <span class="q-num">Pregunta 5</span>
-    <h2>Estrategia de ejecución: ¿en qué fases implantarlo y con qué métricas?</h2>
-  </div>
-  <div class="answer-card">
-    <h3>✅ Respuesta corta</h3>
-    <p><strong>Fase 1 — histórico:</strong> cargar y unificar el histórico de noticias etiquetadas, entrenar el primer modelo en batch, validarlo offline. <strong>Fase 2 — sombras:</strong> desplegar el pipeline de streaming en paralelo a los editores, sin bloquear nada; medir su acuerdo con la decisión humana real. <strong>Fase 3 — asistida:</strong> activar la retención automática solo en el extremo de score evidente; el humano revisa la zona gris. <strong>Fase 4 — plena producción:</strong> el sistema decide solo en la mayoría del flujo, con muestreo de control y monitorización continua.</p>
-  </div>
-
-  <div class="phases-roadmap">
-    <div class="phase" style="--i:0">
-      <div class="phase-dot"></div>
-      <h4>Fase 1 · Histórico y modelo base</h4>
-      <p>Ingesta + colección del histórico, data lake, entrenamiento batch (C+V). Sin streaming aún.</p>
-      <div class="phase-metrics"><span>📈 F1 offline</span><span>🎯 Precisión / recall / F1</span></div>
-    </div>
-    <div class="phase" style="--i:1">
-      <div class="phase-dot"></div>
-      <h4>Fase 2 · Modo sombra</h4>
-      <p>Streaming en paralelo: puntúa todo pero no decide. Se compara con lo que hicieron los editores.</p>
-      <div class="phase-metrics"><span>🤝 % acuerdo con editores</span><span>⏱ Latencia p95 &lt; 60 s</span></div>
-    </div>
-    <div class="phase" style="--i:2">
-      <div class="phase-dot"></div>
-      <h4>Fase 3 · Asistida</h4>
-      <p>Retención automática solo en scores extremos; zona gris → verificador humano.</p>
-      <div class="phase-metrics"><span>🛑 Falsas publicadas → 0</span><span>🧐 Tamaño de cola humana</span></div>
-    </div>
-    <div class="phase" style="--i:3">
-      <div class="phase-dot"></div>
-      <h4>Fase 4 · Producción plena</h4>
-      <p>El sistema decide el grueso del flujo. Muestreo de control, reentrenado periódico, monitorización.</p>
-      <div class="phase-metrics"><span>📉 Drift del modelo</span><span>✅ % noticias correctas entregadas</span></div>
-    </div>
-  </div>
-
-  <h3 class="diagram-title">Métricas clave y qué miden</h3>
-  <div class="signals-grid">
-    <div class="signal-card"><span class="sig-icon">🎯</span><strong>Precisión (precision)</strong><p>De las que retuve, ¿cuántas eran realmente falsas? Evita retener verdades (falsos positivos).</p></div>
-    <div class="signal-card"><span class="sig-icon">🛡️</span><strong>Exhaustividad (recall)</strong><p>De todas las falsas, ¿cuántas atrapé? La métrica estrella: una falsa publicada es el peor error.</p></div>
-    <div class="signal-card"><span class="sig-icon">⚖️</span><strong>F1</strong><p>Equilibrio precisión/recall cuando las clases están desbalanceadas (las falsas son minoría).</p></div>
-    <div class="signal-card"><span class="sig-icon">⏱️</span><strong>Latencia de extremo a extremo</strong><p>Desde que entra la noticia hasta que se entrega: debe ser de segundos (streaming), no horas (batch).</p></div>
-    <div class="signal-card"><span class="sig-icon">📉</span><strong>Drift / degradación</strong><p>Cae la precisión con el tiempo = los bulos cambiaron → hay que reentrenar (monitorización).</p></div>
-    <div class="signal-card"><span class="sig-icon">🧑‍⚖️</span><strong>Carga del verificador humano</strong><p>Si la cola de revisión crece, los umbrales están mal calibrados o el modelo empeoró.</p></div>
-  </div>
-
-  <div class="compare-grid">
-    <div class="compare yes">
-      <h4>✔ Implantación por fases con modo sombra — por qué SÍ</h4>
-      <ul>
-        <li>Valida el sistema con riesgo cero: en modo sombra, un error del modelo no bloquea ni publica nada.</li>
-        <li>Permite calibrar umbrales con decisiones humanas reales antes de automatizar (datos de etiquetado gratis).</li>
-        <li>Los equipos (editores, verificadores) se acostumbran al sistema y confían en él de forma incremental.</li>
-        <li>Coherente con la cadena DIKW de la UT1: datos → información → conocimiento → decisión de negocio medible.</li>
-      </ul>
-    </div>
-    <div class="compare no">
-      <h4>✘ Big-bang: activarlo todo el día uno — por qué NO</h4>
-      <ul>
-        <li>Un modelo sin validar reteniendo noticias reales puede paralizar la agencia el primer día (cola humana infinita).</li>
-        <li>Publicar falsas por umbrales mal calibrados destruye justo la confianza que el sistema debe proteger.</li>
-        <li>Sin línea base (modo sombra) no puedes demostrar que el sistema mejora el proceso anterior: sin métricas comparables no hay evidencia, y Big Data existe para "actuar de modo inteligente basándonos en la evidencia de los datos".</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- ============ RESUMEN 5V ============ -->
-<section class="question reveal">
-  <div class="q-head">
-    <span class="q-num">Repaso</span>
-    <h2>El reto visto con las 5 Vs de la UT1</h2>
-  </div>
-  <div class="vs-grid">
-    <div class="v-card"><span class="v-letter">V</span><strong>Volumen</strong><p>Miles de noticias/día + histórico + señales de redes: petabytes potenciales → almacenamiento distribuido.</p></div>
-    <div class="v-card"><span class="v-letter">V</span><strong>Velocidad</strong><p>Flujo continuo y ventanas de exclusiva minúsculas → ingesta y puntuación en streaming.</p></div>
-    <div class="v-card"><span class="v-letter">V</span><strong>Variedad</strong><p>Texto, RSS, JSON de redes, PDF, imágenes, vídeo → capa de colección que unifica esquemas.</p></div>
-    <div class="v-card"><span class="v-letter">V</span><strong>Veracidad</strong><p>El corazón del reto: separar señal (hechos) de ruido (bulos) antes de servir al cliente.</p></div>
-    <div class="v-card"><span class="v-letter">V</span><strong>Valor</strong><p>Una noticia falsa entregada vale menos que cero: destruye la reputación de la agencia.</p></div>
-  </div>
-</section>
-
+  <footer class="page-foot">
+    <p>Práctica «Reto: detector de noticias falsas» · Justificado con UT1 — Introducción al Big Data (SBD). Las etiquetas <span class="ref-inline">UT1 · p. X</span> citan páginas del PDF; lo marcado como «extra» es conocimiento adicional no contenido en la UT1.</p>
+  </footer>
 </main>
 
-<footer>
-  <p>Práctica: Reto detector de noticias falsas · Basado en UT1 — Introducción al Big Data · Sistemas de Big Data (SBD)</p>
-</footer>
-
-<script src="script.js"></script>
+<script src="js/player.js"></script>
+<script src="js/sims.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
